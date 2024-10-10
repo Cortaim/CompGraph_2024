@@ -10,11 +10,11 @@ public class ColorConverter extends JFrame {
     private JTextField rgbInput;
     private JTextField cmykInput;
     private JTextField hslInput;
-    
+
     private JSlider rSlider, gSlider, bSlider;
     private JSlider cSlider, mSlider, ySlider, kSlider;
     private JSlider hSlider, sSlider, lSlider;
-    
+
     private JPanel colorPanel;
 
     public ColorConverter() {
@@ -25,11 +25,11 @@ public class ColorConverter extends JFrame {
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.insets = new Insets(5, 5, 5, 5);
-        
+
         JLabel rgbLabel = new JLabel("RGB (например, 255,0,0):");
         rgbInput = new JTextField();
         rgbInput.setColumns(10);
-        
+
         rSlider = new JSlider(0, 255);
         gSlider = new JSlider(0, 255);
         bSlider = new JSlider(0, 255);
@@ -37,7 +37,7 @@ public class ColorConverter extends JFrame {
         JLabel cmykLabel = new JLabel("CMYK (например, 0,100,100,0):");
         cmykInput = new JTextField();
         cmykInput.setColumns(10);
-        
+
         cSlider = new JSlider(0, 100);
         mSlider = new JSlider(0, 100);
         ySlider = new JSlider(0, 100);
@@ -46,20 +46,20 @@ public class ColorConverter extends JFrame {
         JLabel hslLabel = new JLabel("HSL (например, 0,100,50):");
         hslInput = new JTextField();
         hslInput.setColumns(10);
-        
+
         hSlider = new JSlider(0, 360);
         sSlider = new JSlider(0, 100);
         lSlider = new JSlider(0, 100);
 
-        JButton convertButton = new JButton("Конвертировать");
         JButton colorChooserButton = new JButton("Выбрать цвет");
 
         colorPanel = new JPanel();
         colorPanel.setBackground(Color.WHITE);
         colorPanel.setPreferredSize(new Dimension(100, 50));
-        
+
         setupSliderListeners();
-        
+        setupTextFieldListeners(); 
+
         gbc.gridx = 0; gbc.gridy = 0;
         add(rgbLabel, gbc);
         gbc.gridx = 1; gbc.gridy = 0;
@@ -119,10 +119,6 @@ public class ColorConverter extends JFrame {
         add(colorChooserButton, gbc);
         gbc.gridx = 1; gbc.gridy = 13;
         add(colorPanel, gbc);
-        
-        gbc.gridx = 0; gbc.gridy = 14;
-        gbc.gridwidth = 2;
-        add(convertButton, gbc);
 
         colorChooserButton.addActionListener(new ActionListener() {
             @Override
@@ -136,19 +132,27 @@ public class ColorConverter extends JFrame {
                 }
             }
         });
+    }
 
-        convertButton.addActionListener(new ActionListener() {
+    private void setupTextFieldListeners() {
+        rgbInput.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if (!rgbInput.getText().isEmpty()) {
-                    convertFromRGB();
-                } else if (!cmykInput.getText().isEmpty()) {
-                    convertFromCMYK();
-                } else if (!hslInput.getText().isEmpty()) {
-                    convertFromHSL();
-                } else {
-                    JOptionPane.showMessageDialog(null, "Заполните одно из полей для конвертации!");
-                }
+                convertFromRGB();
+            }
+        });
+
+        cmykInput.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                convertFromCMYK();
+            }
+        });
+
+        hslInput.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                convertFromHSL();
             }
         });
     }
@@ -208,16 +212,17 @@ public class ColorConverter extends JFrame {
         });
     }
 
+ 
     private void updateColorFromSliders() {
         int r = rSlider.getValue();
         int g = gSlider.getValue();
         int b = bSlider.getValue();
         rgbInput.setText(r + "," + g + "," + b);
         colorPanel.setBackground(new Color(r, g, b));
-        
+
         int[] cmyk = RGBtoCMYK(r, g, b);
         cmykInput.setText(cmyk[0] + "," + cmyk[1] + "," + cmyk[2] + "," + cmyk[3]);
-        
+
         int[] hsl = RGBtoHSL(r, g, b);
         hslInput.setText(hsl[0] + "," + hsl[1] + "," + hsl[2]);
     }
@@ -228,12 +233,15 @@ public class ColorConverter extends JFrame {
         int y = ySlider.getValue();
         int k = kSlider.getValue();
         cmykInput.setText(c + "," + m + "," + y + "," + k);
-        
+
         int[] rgb = CMYKtoRGB(c, m, y, k);
         rSlider.setValue(rgb[0]);
         gSlider.setValue(rgb[1]);
         bSlider.setValue(rgb[2]);
-        updateColorFromSliders();
+        colorPanel.setBackground(new Color(rgb[0], rgb[1], rgb[2]));
+
+        int[] hsl = RGBtoHSL(rgb[0], rgb[1], rgb[2]);
+        hslInput.setText(hsl[0] + "," + hsl[1] + "," + hsl[2]);
     }
 
     private void updateColorFromHSLSliders() {
@@ -241,12 +249,15 @@ public class ColorConverter extends JFrame {
         int s = sSlider.getValue();
         int l = lSlider.getValue();
         hslInput.setText(h + "," + s + "," + l);
-        
+
         int[] rgb = HSLtoRGB(h, s, l);
         rSlider.setValue(rgb[0]);
         gSlider.setValue(rgb[1]);
         bSlider.setValue(rgb[2]);
-        updateColorFromSliders();
+        colorPanel.setBackground(new Color(rgb[0], rgb[1], rgb[2]));
+
+        int[] cmyk = RGBtoCMYK(rgb[0], rgb[1], rgb[2]);
+        cmykInput.setText(cmyk[0] + "," + cmyk[1] + "," + cmyk[2] + "," + cmyk[3]);
     }
 
     private void convertFromRGB() {
@@ -255,12 +266,20 @@ public class ColorConverter extends JFrame {
             int r = Integer.parseInt(rgbValues[0].trim());
             int g = Integer.parseInt(rgbValues[1].trim());
             int b = Integer.parseInt(rgbValues[2].trim());
+
             rSlider.setValue(r);
             gSlider.setValue(g);
             bSlider.setValue(b);
-            updateColorFromSliders();
-        } catch (Exception ex) {
-            JOptionPane.showMessageDialog(null, "Неправильный формат RGB! Введите три числа, разделенных запятыми.");
+            colorPanel.setBackground(new Color(r, g, b));
+
+            int[] cmyk = RGBtoCMYK(r, g, b);
+            cmykInput.setText(cmyk[0] + "," + cmyk[1] + "," + cmyk[2] + "," + cmyk[3]);
+
+            int[] hsl = RGBtoHSL(r, g, b);
+            hslInput.setText(hsl[0] + "," + hsl[1] + "," + hsl[2]);
+
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(null, "Некорректный ввод RGB!");
         }
     }
 
@@ -271,13 +290,23 @@ public class ColorConverter extends JFrame {
             int m = Integer.parseInt(cmykValues[1].trim());
             int y = Integer.parseInt(cmykValues[2].trim());
             int k = Integer.parseInt(cmykValues[3].trim());
+
             cSlider.setValue(c);
             mSlider.setValue(m);
             ySlider.setValue(y);
             kSlider.setValue(k);
-            updateColorFromCMYKSliders();
-        } catch (Exception ex) {
-            JOptionPane.showMessageDialog(null, "Неправильный формат CMYK! Введите четыре числа, разделенных запятыми.");
+
+            int[] rgb = CMYKtoRGB(c, m, y, k);
+            rSlider.setValue(rgb[0]);
+            gSlider.setValue(rgb[1]);
+            bSlider.setValue(rgb[2]);
+            colorPanel.setBackground(new Color(rgb[0], rgb[1], rgb[2]));
+
+            int[] hsl = RGBtoHSL(rgb[0], rgb[1], rgb[2]);
+            hslInput.setText(hsl[0] + "," + hsl[1] + "," + hsl[2]);
+
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(null, "Некорректный ввод CMYK!");
         }
     }
 
@@ -287,116 +316,143 @@ public class ColorConverter extends JFrame {
             int h = Integer.parseInt(hslValues[0].trim());
             int s = Integer.parseInt(hslValues[1].trim());
             int l = Integer.parseInt(hslValues[2].trim());
+
             hSlider.setValue(h);
             sSlider.setValue(s);
             lSlider.setValue(l);
-            updateColorFromHSLSliders();
-        } catch (Exception ex) {
-            JOptionPane.showMessageDialog(null, "Неправильный формат HSL! Введите три числа, разделенных запятыми.");
+
+            int[] rgb = HSLtoRGB(h, s, l);
+            rSlider.setValue(rgb[0]);
+            gSlider.setValue(rgb[1]);
+            bSlider.setValue(rgb[2]);
+            colorPanel.setBackground(new Color(rgb[0], rgb[1], rgb[2]));
+
+            int[] cmyk = RGBtoCMYK(rgb[0], rgb[1], rgb[2]);
+            cmykInput.setText(cmyk[0] + "," + cmyk[1] + "," + cmyk[2] + "," + cmyk[3]);
+
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(null, "Некорректный ввод HSL!");
+        }
+    }
+
+    private void clearOtherFields(String source) {
+        if (!source.equals("RGB")) {
+            rgbInput.setText("");
+            rSlider.setValue(0);
+            gSlider.setValue(0);
+            bSlider.setValue(0);
+        }
+        if (!source.equals("CMYK")) {
+            cmykInput.setText("");
+            cSlider.setValue(0);
+            mSlider.setValue(0);
+            ySlider.setValue(0);
+            kSlider.setValue(0);
+        }
+        if (!source.equals("HSL")) {
+            hslInput.setText("");
+            hSlider.setValue(0);
+            sSlider.setValue(0);
+            lSlider.setValue(0);
         }
     }
 
     private int[] RGBtoCMYK(int r, int g, int b) {
-        double rNorm = r / 255.0;
-        double gNorm = g / 255.0;
-        double bNorm = b / 255.0;
+        float rPercent = r / 255f;
+        float gPercent = g / 255f;
+        float bPercent = b / 255f;
 
-        double k = 1 - Math.max(rNorm, Math.max(gNorm, bNorm));
-        double c = (1 - rNorm - k) / (1 - k);
-        double m = (1 - gNorm - k) / (1 - k);
-        double y = (1 - bNorm - k) / (1 - k);
+        float k = 1 - Math.max(rPercent, Math.max(gPercent, bPercent));
+        float c = (1 - rPercent - k) / (1 - k);
+        float m = (1 - gPercent - k) / (1 - k);
+        float y = (1 - bPercent - k) / (1 - k);
 
-        return new int[]{(int) (c * 100), (int) (m * 100), (int) (y * 100), (int) (k * 100)};
+        return new int[]{Math.round(c * 100), Math.round(m * 100), Math.round(y * 100), Math.round(k * 100)};
     }
 
     private int[] RGBtoHSL(int r, int g, int b) {
-        double rNorm = r / 255.0;
-        double gNorm = g / 255.0;
-        double bNorm = b / 255.0;
+        float rPercent = r / 255f;
+        float gPercent = g / 255f;
+        float bPercent = b / 255f;
 
-        double max = Math.max(rNorm, Math.max(gNorm, bNorm));
-        double min = Math.min(rNorm, Math.min(gNorm, bNorm));
-        double delta = max - min;
+        float max = Math.max(rPercent, Math.max(gPercent, bPercent));
+        float min = Math.min(rPercent, Math.min(gPercent, bPercent));
+        float delta = max - min;
 
-        double h = 0, s, l = (max + min) / 2.0;
-
-        if (delta == 0) {
-            h = 0;
-        } else if (max == rNorm) {
-            h = 60 * (((gNorm - bNorm) / delta) % 6);
-        } else if (max == gNorm) {
-            h = 60 * (((bNorm - rNorm) / delta) + 2);
-        } else if (max == bNorm) {
-            h = 60 * (((rNorm - gNorm) / delta) + 4);
+        float h = 0;
+        if (delta != 0) {
+            if (max == rPercent) {
+                h = (gPercent - bPercent) / delta + (gPercent < bPercent ? 6 : 0);
+            } else if (max == gPercent) {
+                h = (bPercent - rPercent) / delta + 2;
+            } else {
+                h = (rPercent - gPercent) / delta + 4;
+            }
+            h *= 60;
         }
 
-        if (delta == 0) {
-            s = 0;
-        } else {
-            s = delta / (1 - Math.abs(2 * l - 1));
-        }
+        float l = (max + min) / 2;
+        float s = delta == 0 ? 0 : delta / (1 - Math.abs(2 * l - 1));
 
-        return new int[]{(int) h, (int) (s * 100), (int) (l * 100)};
+        return new int[]{Math.round(h), Math.round(s * 100), Math.round(l * 100)};
     }
 
     private int[] CMYKtoRGB(int c, int m, int y, int k) {
-        double cNorm = c / 100.0;
-        double mNorm = m / 100.0;
-        double yNorm = y / 100.0;
-        double kNorm = k / 100.0;
+        float cPercent = c / 100f;
+        float mPercent = m / 100f;
+        float yPercent = y / 100f;
+        float kPercent = k / 100f;
 
-        int r = (int) (255 * (1 - cNorm) * (1 - kNorm));
-        int g = (int) (255 * (1 - mNorm) * (1 - kNorm));
-        int b = (int) (255 * (1 - yNorm) * (1 - kNorm));
+        int r = Math.round(255 * (1 - cPercent) * (1 - kPercent));
+        int g = Math.round(255 * (1 - mPercent) * (1 - kPercent));
+        int b = Math.round(255 * (1 - yPercent) * (1 - kPercent));
 
         return new int[]{r, g, b};
     }
 
     private int[] HSLtoRGB(int h, int s, int l) {
-        double sNorm = s / 100.0;
-        double lNorm = l / 100.0;
+        float sPercent = s / 100f;
+        float lPercent = l / 100f;
 
-        double c = (1 - Math.abs(2 * lNorm - 1)) * sNorm;
-        double x = c * (1 - Math.abs((h / 60.0) % 2 - 1));
-        double m = lNorm - c / 2.0;
+        float c = (1 - Math.abs(2 * lPercent - 1)) * sPercent;
+        float x = c * (1 - Math.abs((h / 60f) % 2 - 1));
+        float m = lPercent - c / 2;
 
-        double r = 0, g = 0, b = 0;
+        float rPrime = 0, gPrime = 0, bPrime = 0;
 
         if (h >= 0 && h < 60) {
-            r = c;
-            g = x;
-            b = 0;
+            rPrime = c;
+            gPrime = x;
         } else if (h >= 60 && h < 120) {
-            r = x;
-            g = c;
-            b = 0;
+            rPrime = x;
+            gPrime = c;
         } else if (h >= 120 && h < 180) {
-            r = 0;
-            g = c;
-            b = x;
+            gPrime = c;
+            bPrime = x;
         } else if (h >= 180 && h < 240) {
-            r = 0;
-            g = x;
-            b = c;
+            gPrime = x;
+            bPrime = c;
         } else if (h >= 240 && h < 300) {
-            r = x;
-            g = 0;
-            b = c;
+            rPrime = x;
+            bPrime = c;
         } else if (h >= 300 && h < 360) {
-            r = c;
-            g = 0;
-            b = x;
+            rPrime = c;
+            bPrime = x;
         }
 
-        int rFinal = (int) ((r + m) * 255);
-        int gFinal = (int) ((g + m) * 255);
-        int bFinal = (int) ((b + m) * 255);
+        int r = Math.round((rPrime + m) * 255);
+        int g = Math.round((gPrime + m) * 255);
+        int b = Math.round((bPrime + m) * 255);
 
-        return new int[]{rFinal, gFinal, bFinal};
+        return new int[]{r, g, b};
     }
 
     public static void main(String[] args) {
-        ColorConverter converter = new ColorConverter();
-        converter.setVisible(true);
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                new ColorConverter().setVisible(true);
+            }
+        });
     }
 }
